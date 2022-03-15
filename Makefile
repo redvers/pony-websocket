@@ -1,5 +1,5 @@
 PONYC ?= ponyc
-PONYC_FLAGS ?=--checktree --verify
+PONYC_FLAGS ?=--checktree --verify -Dopenssl_1.1.x
 config ?= release
 
 BUILD_DIR ?= build/$(config)
@@ -24,23 +24,23 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 examples: $(SOURCE_FILES) $(EXAMPLES_SOURCE_FILES) | $(BUILD_DIR)
-	stable env $(PONYC) --path=. $(EXAMPLES_DIR)/broadcast   -o $(BUILD_DIR) $(PONYC_FLAGS)
-	stable env $(PONYC) --path=. $(EXAMPLES_DIR)/echo-server -o $(BUILD_DIR) $(PONYC_FLAGS)
-	stable env $(PONYC) --path=. $(EXAMPLES_DIR)/simple-echo -o $(BUILD_DIR) $(PONYC_FLAGS)
-	stable env $(PONYC) --path=. $(EXAMPLES_DIR)/ssl-echo    -o $(BUILD_DIR) $(PONYC_FLAGS)
+#	corral run -- $(PONYC) --path=. $(EXAMPLES_DIR)/broadcast   -o $(BUILD_DIR) $(PONYC_FLAGS)
+	corral run -- $(PONYC) --path=. $(EXAMPLES_DIR)/echo-server -o $(BUILD_DIR) $(PONYC_FLAGS)
+#	corral run -- $(PONYC) --path=. $(EXAMPLES_DIR)/simple-echo -o $(BUILD_DIR) $(PONYC_FLAGS)
+#	corral run -- $(PONYC) --path=. $(EXAMPLES_DIR)/ssl-echo -o $(BUILD_DIR) $(PONYC_FLAGS)
 
 clean:
 	rm -rf $(BUILD_DIR) .coverage
 
 test:
-	$(BUILD_DIR)/echo-server > /dev/null &
+#	$(BUILD_DIR)/echo-server &
 	docker run -it --rm --userns=host \
 	  -v ${PWD}/tests:/config \
 	  -v ${PWD}/reports:/reports \
 	  --network host \
 	  --name fuzzingclient \
 	  crossbario/autobahn-testsuite \
-	  /usr/local/bin/wstest --mode fuzzingclient --spec /config/fuzzingclient.json
+	  /opt/pypy/bin/wstest -d --mode fuzzingclient --spec /config/fuzzingclient.json
 	killall echo-server
 
 .PHONY: clean examples test

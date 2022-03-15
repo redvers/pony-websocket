@@ -1,6 +1,8 @@
 use "net"
 use "buffered"
 
+use @printf[I32](fmt: Pointer[U8] tag, ...)
+
 primitive Opened
 primitive Closed
 primitive Continue
@@ -40,13 +42,14 @@ class WebSocket
     end
 
   fun ref _handle_handshake(conn: TCPConnection ref, buffer: Reader ref) : (Opened val | Closed val | Continue val) =>
+    @printf("In _handle_handshake\n".cstring())
     try
       match _http_parser.parse(_buffer)?
       | let req: HandshakeRequest val =>
         let rep = req._handshake()?
         conn.write(rep)
         _state = _Open
-        conn.expect(2) // expect minimal header
+        conn.expect(2)? // expect minimal header
         return Opened
       end
     else
@@ -61,23 +64,23 @@ class WebSocket
     | let f: Frame val =>
       match f.opcode
       | Text =>
-        conn.expect(2)
+        conn.expect(2)?
         return f.data
       | Binary =>
-        conn.expect(2)
+        conn.expect(2)?
         return f.data
       | Ping =>
         _pong(conn, f.data as Array[U8] val)
-        conn.expect(2)
+        conn.expect(2)?
         return Continue
       | Close =>
         close(conn, _frame_decoder.status)
         return Closed
       end
       // expect next header
-      conn.expect(2)
+      conn.expect(2)?
     | let n: USize =>
-      conn.expect(n) // need more data to parse an frame
+      conn.expect(n)? // need more data to parse an frame
       return Continue
     end
     Continue

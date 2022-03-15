@@ -1,4 +1,4 @@
-use "package:../../websocket"
+use "websocket"
 use "net"
 
 class EchoConnectionNotify is TCPConnectionNotify
@@ -24,6 +24,5 @@ class EchoListenNotify is TCPListenNotify
 
 actor Main
   new create(env: Env) =>
-    try
-      let listener = TCPListener(env.root as AmbientAuth, EchoListenNotify, "0.0.0.0", "8989")
-    end
+    let tcplauth: TCPListenAuth = TCPListenAuth(env.root)
+    let listener = TCPListener(tcplauth, EchoListenNotify, "0.0.0.0", "8989")

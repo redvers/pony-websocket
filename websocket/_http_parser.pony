@@ -69,6 +69,7 @@ class _HttpParser
     if _state is _ExpectError then error end
 
   fun ref _process_header(line: String iso) ? =>
+    @printf(line.cstring())
     let i = line.find(":")?
     (let key, let value) = (consume line).chop(i.usize())
     key.>strip().lower_in_place()
